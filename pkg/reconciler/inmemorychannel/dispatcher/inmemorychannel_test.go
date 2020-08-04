@@ -95,7 +95,7 @@ func TestAllCases(t *testing.T) {
 			Name: "with subscribers",
 			Key:  imcKey,
 			Objects: []runtime.Object{
-				NewInMemoryChwith sannel(imcName, testNS,
+				NewInMemoryChannel(imcName, testNS,
 					WithInitInMemoryChannelConditions,
 					WithInMemoryChannelDeploymentReady(),
 					WithInMemoryChannelServiceReady(),
