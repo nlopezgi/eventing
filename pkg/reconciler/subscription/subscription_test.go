@@ -22,23 +22,26 @@ import (
 	"fmt"
 	"testing"
 
-	eventingv1beta1 "knative.dev/eventing/pkg/apis/eventing/v1beta1"
+	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	"knative.dev/pkg/injection/clients/dynamicclient"
 
 	corev1 "k8s.io/api/core/v1"
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	clientgotesting "k8s.io/client-go/testing"
+	"knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
-	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
+	"knative.dev/eventing/pkg/apis/duck/v1beta1"
+	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
+	messagingv1 "knative.dev/eventing/pkg/apis/messaging/v1"
 	"knative.dev/eventing/pkg/client/injection/ducks/duck/v1alpha1/channelable"
 	"knative.dev/eventing/pkg/client/injection/ducks/duck/v1alpha1/channelablecombined"
-	"knative.dev/eventing/pkg/client/injection/reconciler/messaging/v1beta1/subscription"
+	"knative.dev/eventing/pkg/client/injection/reconciler/messaging/v1/subscription"
 	"knative.dev/eventing/pkg/duck"
 	"knative.dev/eventing/pkg/utils"
 	"knative.dev/pkg/apis"
@@ -52,7 +55,7 @@ import (
 
 	_ "knative.dev/eventing/pkg/client/injection/informers/messaging/v1beta1/channel/fake"
 	_ "knative.dev/eventing/pkg/client/injection/informers/messaging/v1beta1/inmemorychannel/fake"
-	. "knative.dev/eventing/pkg/reconciler/testing/v1beta1"
+	. "knative.dev/eventing/pkg/reconciler/testing/v1"
 	. "knative.dev/pkg/reconciler/testing"
 )
 
@@ -139,11 +142,11 @@ var (
 
 func init() {
 	// Add types to scheme
-	_ = eventingv1beta1.AddToScheme(scheme.Scheme)
+	_ = eventingv1.AddToScheme(scheme.Scheme)
 	_ = duckv1alpha1.AddToScheme(scheme.Scheme)
-	_ = eventingduckv1alpha1.AddToScheme(scheme.Scheme)
-	_ = apiextensionsv1beta1.AddToScheme(scheme.Scheme)
-	_ = messagingv1beta1.AddToScheme(scheme.Scheme)
+	_ = v1alpha1.AddToScheme(scheme.Scheme)
+	_ = apiextensionsv1.AddToScheme(scheme.Scheme)
+	_ = messagingv1.AddToScheme(scheme.Scheme)
 }
 
 func TestAllCases(t *testing.T) {
@@ -184,7 +187,7 @@ func TestAllCases(t *testing.T) {
 				NewInMemoryChannel(channelName, testNS,
 					WithInitInMemoryChannelConditions,
 					WithInMemoryChannelReady(channelDNS),
-					WithInMemoryChannelSubscribers([]eventingduck.SubscriberSpec{{
+					WithInMemoryChannelSubscribers([]v1beta1.SubscriberSpec{{
 						UID:           subscriptionUID,
 						Generation:    0,
 						SubscriberURI: subscriberURI,
@@ -195,7 +198,7 @@ func TestAllCases(t *testing.T) {
 						SubscriberURI: apis.HTTP("call2"),
 						ReplyURI:      apis.HTTP("sink2"),
 					}}),
-					WithInMemoryChannelStatusSubscribers([]eventingduck.SubscriberStatus{{
+					WithInMemoryChannelStatusSubscribers([]v1beta1.SubscriberStatus{{
 						UID:                subscriptionUID,
 						ObservedGeneration: 0,
 						Ready:              "True",
@@ -456,7 +459,7 @@ func TestAllCases(t *testing.T) {
 				),
 			}},
 			WantPatches: []clientgotesting.PatchActionImpl{
-				patchSubscribers(testNS, channelName, []eventingduck.SubscriberSpec{
+				patchSubscribers(testNS, channelName, []eventingduckv1beta1.SubscriberSpec{
 					{UID: subscriptionUID, SubscriberURI: subscriberURI},
 				}),
 				patchFinalizers(testNS, subscriptionName),
@@ -583,8 +586,8 @@ func TestAllCases(t *testing.T) {
 				),
 			}},
 			WantPatches: []clientgotesting.PatchActionImpl{
-				patchSubscribers(testNS, channelName, []eventingduck.SubscriberSpec{
-					{UID: subscriptionUID, SubscriberURI: subscriberURI, Delivery: &eventingduck.DeliverySpec{DeadLetterSink: &duckv1.Destination{URI: apis.HTTP("dlc.mynamespace.svc.cluster.local")}}},
+				patchSubscribers(testNS, channelName, []eventingduckv1beta1.SubscriberSpec{
+					{UID: subscriptionUID, SubscriberURI: subscriberURI, Delivery: &eventingduckv1beta1.DeliverySpec{DeadLetterSink: &duckv1.Destination{URI: apis.HTTP("dlc.mynamespace.svc.cluster.local")}}},
 				}),
 				patchFinalizers(testNS, subscriptionName),
 			},
@@ -728,7 +731,7 @@ func TestAllCases(t *testing.T) {
 				),
 			}},
 			WantPatches: []clientgotesting.PatchActionImpl{
-				patchSubscribers(testNS, channelName, []eventingduck.SubscriberSpec{
+				patchSubscribers(testNS, channelName, []eventingduckv1beta1.SubscriberSpec{
 					{UID: subscriptionUID, SubscriberURI: subscriberURI},
 				}),
 				patchFinalizers(testNS, subscriptionName),
@@ -811,7 +814,7 @@ func TestAllCases(t *testing.T) {
 				),
 			}},
 			WantPatches: []clientgotesting.PatchActionImpl{
-				patchSubscribers(testNS, channelName, []eventingduck.SubscriberSpec{
+				patchSubscribers(testNS, channelName, []eventingduckv1beta1.SubscriberSpec{
 					{UID: subscriptionUID, ReplyURI: replyURI},
 				}),
 				patchFinalizers(testNS, subscriptionName),
@@ -853,7 +856,7 @@ func TestAllCases(t *testing.T) {
 				),
 			}},
 			WantPatches: []clientgotesting.PatchActionImpl{
-				patchSubscribers(testNS, channelName, []eventingduck.SubscriberSpec{
+				patchSubscribers(testNS, channelName, []eventingduckv1beta1.SubscriberSpec{
 					{UID: subscriptionUID, ReplyURI: replyURI},
 				}),
 				patchFinalizers(testNS, subscriptionName),
@@ -901,7 +904,7 @@ func TestAllCases(t *testing.T) {
 				),
 			}},
 			WantPatches: []clientgotesting.PatchActionImpl{
-				patchSubscribers(testNS, channelName, []eventingduck.SubscriberSpec{
+				patchSubscribers(testNS, channelName, []eventingduckv1beta1.SubscriberSpec{
 					{UID: subscriptionUID, SubscriberURI: subscriberURI, ReplyURI: replyURI},
 				}),
 				patchFinalizers(testNS, subscriptionName),
@@ -925,7 +928,7 @@ func TestAllCases(t *testing.T) {
 				NewInMemoryChannel(channelName, testNS,
 					WithInitInMemoryChannelConditions,
 					WithInMemoryChannelAddress(channelDNS),
-					WithInMemoryChannelSubscribers([]eventingduck.SubscriberSpec{
+					WithInMemoryChannelSubscribers([]eventingduckv1beta1.SubscriberSpec{
 						{UID: subscriptionUID, SubscriberURI: subscriberURI, ReplyURI: replyURI},
 					}),
 					WithInMemoryChannelReadySubscriberAndGeneration(subscriptionUID, subscriptionGeneration),
@@ -950,7 +953,7 @@ func TestAllCases(t *testing.T) {
 				),
 			}},
 			WantPatches: []clientgotesting.PatchActionImpl{
-				patchSubscribers(testNS, channelName, []eventingduck.SubscriberSpec{
+				patchSubscribers(testNS, channelName, []eventingduckv1beta1.SubscriberSpec{
 					{UID: subscriptionUID, Generation: subscriptionGeneration, SubscriberURI: subscriberURI},
 				}),
 			},
@@ -970,7 +973,7 @@ func TestAllCases(t *testing.T) {
 				NewInMemoryChannel(channelName, testNS,
 					WithInitInMemoryChannelConditions,
 					WithInMemoryChannelAddress(channelDNS),
-					WithInMemoryChannelSubscribers([]eventingduck.SubscriberSpec{
+					WithInMemoryChannelSubscribers([]eventingduckv1beta1.SubscriberSpec{
 						{UID: subscriptionUID, SubscriberURI: subscriberURI, ReplyURI: replyURI},
 					}),
 					WithInMemoryChannelReadySubscriberAndGeneration(subscriptionUID, subscriptionGeneration),
@@ -999,7 +1002,7 @@ func TestAllCases(t *testing.T) {
 				),
 			}},
 			WantPatches: []clientgotesting.PatchActionImpl{
-				patchSubscribers(testNS, channelName, []eventingduck.SubscriberSpec{
+				patchSubscribers(testNS, channelName, []eventingduckv1beta1.SubscriberSpec{
 					{UID: subscriptionUID, Generation: subscriptionGeneration, ReplyURI: replyURI},
 				}),
 				patchFinalizers(testNS, subscriptionName),
@@ -1038,7 +1041,7 @@ func TestAllCases(t *testing.T) {
 				),
 			}},
 			WantPatches: []clientgotesting.PatchActionImpl{
-				patchSubscribers(testNS, channelName, []eventingduck.SubscriberSpec{
+				patchSubscribers(testNS, channelName, []eventingduckv1beta1.SubscriberSpec{
 					{UID: subscriptionUID, SubscriberURI: serviceURIWithPath},
 				}),
 				patchFinalizers(testNS, subscriptionName),
@@ -1087,7 +1090,7 @@ func TestAllCases(t *testing.T) {
 				),
 			}},
 			WantPatches: []clientgotesting.PatchActionImpl{
-				patchSubscribers(testNS, channelName, []eventingduck.SubscriberSpec{
+				patchSubscribers(testNS, channelName, []eventingduckv1beta1.SubscriberSpec{
 					{UID: "a-" + subscriptionUID, SubscriberURI: serviceURIWithPath},
 				}),
 				patchFinalizers(testNS, "a-"+subscriptionName),
@@ -1116,7 +1119,7 @@ func TestAllCases(t *testing.T) {
 				),
 				NewInMemoryChannel(channelName, testNS,
 					WithInitInMemoryChannelConditions,
-					WithInMemoryChannelSubscribers([]eventingduck.SubscriberSpec{
+					WithInMemoryChannelSubscribers([]eventingduckv1beta1.SubscriberSpec{
 						{UID: "a-" + subscriptionUID, SubscriberURI: subscriberURI, ReplyURI: replyURI},
 					}),
 					WithInMemoryChannelAddress(channelDNS),
@@ -1146,8 +1149,8 @@ func TestAllCases(t *testing.T) {
 				),
 			}},
 			WantPatches: []clientgotesting.PatchActionImpl{
-				patchSubscribers(testNS, channelName, []eventingduck.SubscriberSpec{
-					{UID: "a-" + subscriptionUID, SubscriberURI: serviceURIWithPath, Delivery: &eventingduck.DeliverySpec{DeadLetterSink: &duckv1.Destination{URI: apis.HTTP("dlc.mynamespace.svc.cluster.local")}}},
+				patchSubscribers(testNS, channelName, []eventingduckv1beta1.SubscriberSpec{
+					{UID: "a-" + subscriptionUID, SubscriberURI: serviceURIWithPath, Delivery: &eventingduckv1beta1.DeliverySpec{DeadLetterSink: &duckv1.Destination{URI: apis.HTTP("dlc.mynamespace.svc.cluster.local")}}},
 				}),
 				patchFinalizers(testNS, "a-"+subscriptionName),
 			},
@@ -1268,7 +1271,7 @@ func TestAllCases(t *testing.T) {
 				NewInMemoryChannel(channelName, testNS,
 					WithInitInMemoryChannelConditions,
 					WithInMemoryChannelAddress(channelDNS),
-					WithInMemoryChannelSubscribers([]eventingduck.SubscriberSpec{
+					WithInMemoryChannelSubscribers([]eventingduckv1beta1.SubscriberSpec{
 						{UID: subscriptionUID, SubscriberURI: subscriberURI},
 					}),
 				),
@@ -1334,7 +1337,7 @@ func TestAllCases(t *testing.T) {
 				NewInMemoryChannel(channelName, testNS,
 					WithInitInMemoryChannelConditions,
 					WithInMemoryChannelAddress(channelDNS),
-					WithInMemoryChannelSubscribers([]eventingduck.SubscriberSpec{
+					WithInMemoryChannelSubscribers([]eventingduckv1beta1.SubscriberSpec{
 						{UID: subscriptionUID, SubscriberURI: subscriberURI},
 					}),
 					WithInMemoryChannelReadySubscriber(subscriptionUID),
@@ -1440,7 +1443,7 @@ func patchSubscribersV1Alpha1(namespace, name string, subscribers []eventingduck
 	return action
 }
 
-func patchSubscribers(namespace, name string, subscribers []eventingduck.SubscriberSpec) clientgotesting.PatchActionImpl {
+func patchSubscribers(namespace, name string, subscribers []eventingduckv1beta1.SubscriberSpec) clientgotesting.PatchActionImpl {
 	action := clientgotesting.PatchActionImpl{}
 	action.Name = name
 	action.Namespace = namespace
