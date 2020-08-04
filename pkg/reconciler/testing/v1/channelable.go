@@ -14,7 +14,7 @@ limitations under the License.
 package testing
 
 import (
-	"time"
+	"context"
 
 	"k8s.io/apimachinery/pkg/types"
 
@@ -22,10 +22,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	duckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	duckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	"knative.dev/eventing/pkg/apis/messaging"
 	"knative.dev/pkg/apis"
-	pkgduckv1 "knative.dev/pkg/apis/duck/v1"
 	pkgduckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+	pkgduckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
 // Channelable allows us to have a fake channel for testing that implements a v1alpha1.Channelable type.
@@ -61,11 +62,6 @@ func WithChannelableStatusObservedGeneration(gen int64) ChannelableOption {
 	}
 }
 
-func WithChannelableDeleted(imc *v1alpha1.Channelable) {
-	deleteTime := metav1.NewTime(time.Unix(1e9, 0))
-	imc.ObjectMeta.SetDeletionTimestamp(&deleteTime)
-}
-
 func WithChannelableSubscribers(subscribers []v1alpha1.SubscriberSpec) ChannelableOption {
 	return func(c *v1alpha1.Channelable) {
 		c.Spec.Subscribable = &v1alpha1.Subscribable{Subscribers: subscribers}
@@ -81,7 +77,7 @@ func WithChannelableReadySubscriberAndGeneration(uid string, observedGeneration 
 		if c.Status.GetSubscribableTypeStatus() == nil { // Both the SubscribableStatus fields are nil
 			c.Status.SetSubscribableTypeStatus(v1alpha1.SubscribableStatus{})
 		}
-		c.Status.SubscribableTypeStatus.AddSubscriberToSubscribableStatus(duckv1.SubscriberStatus{
+		c.Status.SubscribableTypeStatus.AddSubscriberToSubscribableStatus(duckv1beta1.SubscriberStatus{
 			UID:                types.UID(uid),
 			ObservedGeneration: observedGeneration,
 			Ready:              corev1.ConditionTrue,
@@ -89,10 +85,16 @@ func WithChannelableReadySubscriberAndGeneration(uid string, observedGeneration 
 	}
 }
 
-func WithChannelableStatusSubscribers(subscriberStatuses []duckv1.SubscriberStatus) ChannelableOption {
+func WithChannelableStatusSubscribers(ctx context.Context, subscriberStatuses []duckv1.SubscriberStatus) ChannelableOption {
 	return func(c *v1alpha1.Channelable) {
+
+		subscriberStatusesV1beta1 := make([]duckv1beta1.SubscriberStatus, len(subscriberStatuses))
+		for i, subscriberStatus := range subscriberStatuses {
+			subscriberStatus.ConvertTo(ctx, &subscriberStatusesV1beta1[i])
+
+		}
 		c.Status.SetSubscribableTypeStatus(v1alpha1.SubscribableStatus{
-			Subscribers: subscriberStatuses})
+			Subscribers: subscriberStatusesV1beta1})
 	}
 }
 
@@ -105,7 +107,7 @@ func WithChannelableReady() ChannelableOption {
 func WithChannelableAddress(a string) ChannelableOption {
 	return func(c *v1alpha1.Channelable) {
 		c.Status.Address = &pkgduckv1alpha1.Addressable{
-			Addressable: pkgduckv1.Addressable{
+			Addressable: pkgduckv1beta1.Addressable{
 				URL: apis.HTTP(a),
 			},
 		}
