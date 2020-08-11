@@ -20,6 +20,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/apis/duck"
@@ -112,7 +113,13 @@ func (c *Channelable) Populate() {
 		AddressStatus: v1alpha1.AddressStatus{
 			Address: &v1alpha1.Addressable{
 				// Populate ALL fields
-				Addressable: duckv1beta1.Addressable{
+				Addressable: duckv1.Addressable{
+					URL: &apis.URL{
+						Scheme: "http",
+						Host:   "test-domain",
+					},
+				},
+				Addressablev1beta1: duckv1beta1.Addressable{
 					URL: &apis.URL{
 						Scheme: "http",
 						Host:   "test-domain",
@@ -123,7 +130,18 @@ func (c *Channelable) Populate() {
 		},
 		SubscribableTypeStatus: SubscribableTypeStatus{
 			SubscribableStatus: &SubscribableStatus{
-				Subscribers: []eventingduckv1beta1.SubscriberStatus{{
+				Subscribersv1beta1: []eventingduckv1beta1.SubscriberStatus{{
+					UID:                "2f9b5e8e-deb6-11e8-9f32-f2801f1b9fd1",
+					ObservedGeneration: 1,
+					Ready:              corev1.ConditionTrue,
+					Message:            "Some message",
+				}, {
+					UID:                "34c5aec8-deb6-11e8-9f32-f2801f1b9fd1",
+					ObservedGeneration: 2,
+					Ready:              corev1.ConditionFalse,
+					Message:            "Some message",
+				}},
+				Subscribers: []eventingduckv1.SubscriberStatus{{
 					UID:                "2f9b5e8e-deb6-11e8-9f32-f2801f1b9fd1",
 					ObservedGeneration: 1,
 					Ready:              corev1.ConditionTrue,

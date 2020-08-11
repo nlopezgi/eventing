@@ -80,9 +80,9 @@ type ChannelableCombinedStatus struct {
 	// SubscribableTypeStatus is the v1alpha1 part of the Subscribers status
 	SubscribableTypeStatus `json:",inline"`
 	// SubscribableStatus is the v1beta1 part of the Subscribers status.
-	eventingduckv1beta1.SubscribableStatus `json:",inline"`
+	SubscribableStatusv1beta1 eventingduckv1beta1.SubscribableStatus `json:",inline"`
 	// SubscribableStatusv1 is the v1 part of the Subscribers status.
-	SubscribableStatusv1 eventingduckv1.SubscribableStatus `json:",inline"`
+	eventingduckv1.SubscribableStatus `json:",inline"`
 	// ErrorChannel is set by the channel when it supports native error handling via a channel
 	// +optional
 	ErrorChannel *corev1.ObjectReference `json:"errorChannel,omitempty"`
@@ -164,7 +164,7 @@ func (c *ChannelableCombined) Populate() {
 		BackoffPolicy:  &linearv1,
 		BackoffDelay:   &delay,
 	}
-	subscribers := []eventingduckv1beta1.SubscriberStatus{{
+	subscribersv1beta1 := []eventingduckv1beta1.SubscriberStatus{{
 		UID:                "2f9b5e8e-deb6-11e8-9f32-f2801f1b9fd1",
 		ObservedGeneration: 1,
 		Ready:              corev1.ConditionTrue,
@@ -175,7 +175,7 @@ func (c *ChannelableCombined) Populate() {
 		Ready:              corev1.ConditionFalse,
 		Message:            "Some message",
 	}}
-	subscribersv1 := []eventingduckv1.SubscriberStatus{{
+	subscribers := []eventingduckv1.SubscriberStatus{{
 		UID:                "2f9b5e8e-deb6-11e8-9f32-f2801f1b9fd1",
 		ObservedGeneration: 1,
 		Ready:              corev1.ConditionTrue,
@@ -190,7 +190,13 @@ func (c *ChannelableCombined) Populate() {
 		AddressStatus: v1alpha1.AddressStatus{
 			Address: &v1alpha1.Addressable{
 				// Populate ALL fields
-				Addressable: duckv1beta1.Addressable{
+				Addressable: duckv1.Addressable{
+					URL: &apis.URL{
+						Scheme: "http",
+						Host:   "test-domain",
+					},
+				},
+				Addressablev1beta1: duckv1beta1.Addressable{
 					URL: &apis.URL{
 						Scheme: "http",
 						Host:   "test-domain",
@@ -199,16 +205,16 @@ func (c *ChannelableCombined) Populate() {
 				Hostname: "test-domain",
 			},
 		},
-		SubscribableStatus: eventingduckv1beta1.SubscribableStatus{
-			Subscribers: subscribers,
+		SubscribableStatusv1beta1: eventingduckv1beta1.SubscribableStatus{
+			Subscribers: subscribersv1beta1,
 		},
-		SubscribableStatusv1: eventingduckv1.SubscribableStatus{
-			Subscribers: subscribersv1,
+		SubscribableStatus: eventingduckv1.SubscribableStatus{
+			Subscribers: subscribers,
 		},
 		SubscribableTypeStatus: SubscribableTypeStatus{
 			SubscribableStatus: &SubscribableStatus{
-				Subscribers:   subscribers,
-				Subscribersv1: subscribersv1,
+				Subscribersv1beta1: subscribersv1beta1,
+				Subscribers:        subscribers,
 			},
 		},
 	}

@@ -20,12 +20,12 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	duckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	duckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	"knative.dev/eventing/pkg/apis/messaging"
 	"knative.dev/pkg/apis"
+	pkgduckv1 "knative.dev/pkg/apis/duck/v1"
 	pkgduckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
-	pkgduckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
 // Channelable allows us to have a fake channel for testing that implements a v1alpha1.Channelable type.
@@ -81,7 +81,7 @@ func WithChannelableReadySubscriberAndGeneration(uid string, observedGeneration 
 		if c.Status.GetSubscribableTypeStatus() == nil { // Both the SubscribableStatus fields are nil
 			c.Status.SetSubscribableTypeStatus(v1alpha1.SubscribableStatus{})
 		}
-		c.Status.SubscribableTypeStatus.AddSubscriberV1beta1ToSubscribableStatus(duckv1beta1.SubscriberStatus{
+		c.Status.SubscribableTypeStatus.AddSubscriberToSubscribableStatus(duckv1.SubscriberStatus{
 			UID:                types.UID(uid),
 			ObservedGeneration: observedGeneration,
 			Ready:              corev1.ConditionTrue,
@@ -89,10 +89,10 @@ func WithChannelableReadySubscriberAndGeneration(uid string, observedGeneration 
 	}
 }
 
-func WithChannelableStatusSubscribers(subscriberStatuses []duckv1beta1.SubscriberStatus) ChannelableOption {
+func WithChannelableStatusSubscribers(subscriberStatuses []duckv1.SubscriberStatus) ChannelableOption {
 	return func(c *v1alpha1.Channelable) {
 		c.Status.SetSubscribableTypeStatus(v1alpha1.SubscribableStatus{
-			Subscribersv1beta1: subscriberStatuses})
+			Subscribers: subscriberStatuses})
 	}
 }
 
@@ -105,7 +105,7 @@ func WithChannelableReady() ChannelableOption {
 func WithChannelableAddress(a string) ChannelableOption {
 	return func(c *v1alpha1.Channelable) {
 		c.Status.Address = &pkgduckv1alpha1.Addressable{
-			Addressablev1beta1: pkgduckv1beta1.Addressable{
+			Addressable: pkgduckv1.Addressable{
 				URL: apis.HTTP(a),
 			},
 		}

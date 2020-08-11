@@ -126,7 +126,13 @@ func TestChannelableCombinedPopulate(t *testing.T) {
 			AddressStatus: v1alpha1.AddressStatus{
 				Address: &v1alpha1.Addressable{
 					// Populate ALL fields
-					Addressable: duckv1beta1.Addressable{
+					Addressable: duckv1.Addressable{
+						URL: &apis.URL{
+							Scheme: "http",
+							Host:   "test-domain",
+						},
+					},
+					Addressablev1beta1: duckv1beta1.Addressable{
 						URL: &apis.URL{
 							Scheme: "http",
 							Host:   "test-domain",
@@ -135,7 +141,7 @@ func TestChannelableCombinedPopulate(t *testing.T) {
 					Hostname: "test-domain",
 				},
 			},
-			SubscribableStatus: eventingduckv1beta1.SubscribableStatus{
+			SubscribableStatusv1beta1: eventingduckv1beta1.SubscribableStatus{
 				Subscribers: []eventingduckv1beta1.SubscriberStatus{{
 					UID:                "2f9b5e8e-deb6-11e8-9f32-f2801f1b9fd1",
 					ObservedGeneration: 1,
@@ -148,7 +154,7 @@ func TestChannelableCombinedPopulate(t *testing.T) {
 					Message:            "Some message",
 				}},
 			},
-			SubscribableStatusv1: eventingduckv1.SubscribableStatus{
+			SubscribableStatus: eventingduckv1.SubscribableStatus{
 				Subscribers: []eventingduckv1.SubscriberStatus{{
 					UID:                "2f9b5e8e-deb6-11e8-9f32-f2801f1b9fd1",
 					ObservedGeneration: 1,
@@ -163,7 +169,7 @@ func TestChannelableCombinedPopulate(t *testing.T) {
 			},
 			SubscribableTypeStatus: SubscribableTypeStatus{
 				SubscribableStatus: &SubscribableStatus{
-					Subscribers: []eventingduckv1beta1.SubscriberStatus{{
+					Subscribersv1beta1: []eventingduckv1beta1.SubscriberStatus{{
 						UID:                "2f9b5e8e-deb6-11e8-9f32-f2801f1b9fd1",
 						ObservedGeneration: 1,
 						Ready:              corev1.ConditionTrue,
@@ -174,7 +180,7 @@ func TestChannelableCombinedPopulate(t *testing.T) {
 						Ready:              corev1.ConditionFalse,
 						Message:            "Some message",
 					}},
-					Subscribersv1: []eventingduckv1.SubscriberStatus{{
+					Subscribers: []eventingduckv1.SubscriberStatus{{
 						UID:                "2f9b5e8e-deb6-11e8-9f32-f2801f1b9fd1",
 						ObservedGeneration: 1,
 						Ready:              corev1.ConditionTrue,

@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"testing"
 
-	"k8s.io/api/apps/v1beta1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -29,13 +29,13 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	clientgotesting "k8s.io/client-go/testing"
+	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	"knative.dev/eventing/pkg/client/injection/ducks/duck/v1alpha1/channelablecombined"
-	channelreconciler "knative.dev/eventing/pkg/client/injection/reconciler/messaging/v1beta1/channel"
+	channelreconciler "knative.dev/eventing/pkg/client/injection/reconciler/messaging/v1/channel"
 	"knative.dev/eventing/pkg/duck"
-	. "knative.dev/eventing/pkg/reconciler/testing/v1beta1"
+	. "knative.dev/eventing/pkg/reconciler/testing/v1"
 	"knative.dev/eventing/pkg/utils"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -59,7 +59,7 @@ var (
 
 func init() {
 	// Add types to scheme
-	_ = v1beta1.AddToScheme(scheme.Scheme)
+	_ = appsv1.AddToScheme(scheme.Scheme)
 	_ = eventingduckv1alpha1.AddToScheme(scheme.Scheme)
 }
 
@@ -280,7 +280,7 @@ func TestReconcile(t *testing.T) {
 
 func channelCRD() metav1.TypeMeta {
 	return metav1.TypeMeta{
-		APIVersion: "messaging.knative.dev/v1beta1",
+		APIVersion: "messaging.knative.dev/v1",
 		Kind:       "InMemoryChannel",
 	}
 }
@@ -292,8 +292,8 @@ func channelableV1Alpha1CRD() metav1.TypeMeta {
 	}
 }
 
-func subscribers() []eventingduckv1beta1.SubscriberSpec {
-	return []eventingduckv1beta1.SubscriberSpec{{
+func subscribers() []eventingduckv1.SubscriberSpec {
+	return []eventingduckv1.SubscriberSpec{{
 		UID:           "2f9b5e8e-deb6-11e8-9f32-f2801f1b9fd1",
 		Generation:    1,
 		SubscriberURI: apis.HTTP("call1"),
@@ -320,8 +320,8 @@ func subscribersV1Alpha1() []eventingduckv1alpha1.SubscriberSpec {
 	}}
 }
 
-func subscriberStatuses() []eventingduckv1beta1.SubscriberStatus {
-	return []eventingduckv1beta1.SubscriberStatus{{
+func subscriberStatuses() []eventingduckv1.SubscriberStatus {
+	return []eventingduckv1.SubscriberStatus{{
 		UID:                "2f9b5e8e-deb6-11e8-9f32-f2801f1b9fd1",
 		ObservedGeneration: 1,
 		Ready:              "True",
@@ -335,7 +335,7 @@ func subscriberStatuses() []eventingduckv1beta1.SubscriberStatus {
 func createChannelCRD(namespace, name string, ready bool) *unstructured.Unstructured {
 	u := &unstructured.Unstructured{
 		Object: map[string]interface{}{
-			"apiVersion": "messaging.knative.dev/v1beta1",
+			"apiVersion": "messaging.knative.dev/v1",
 			"kind":       "InMemoryChannel",
 			"metadata": map[string]interface{}{
 				"creationTimestamp": nil,
@@ -343,7 +343,7 @@ func createChannelCRD(namespace, name string, ready bool) *unstructured.Unstruct
 				"name":              name,
 				"ownerReferences": []interface{}{
 					map[string]interface{}{
-						"apiVersion":         "messaging.knative.dev/v1beta1",
+						"apiVersion":         "messaging.knative.dev/v1",
 						"blockOwnerDeletion": true,
 						"controller":         true,
 						"kind":               "Channel",
@@ -367,7 +367,7 @@ func createChannelCRD(namespace, name string, ready bool) *unstructured.Unstruct
 
 func backingChannelObjRef() *duckv1.KReference {
 	return &duckv1.KReference{
-		APIVersion: "messaging.knative.dev/v1beta1",
+		APIVersion: "messaging.knative.dev/v1",
 		Kind:       "InMemoryChannel",
 		Namespace:  testNS,
 		Name:       channelName,
@@ -389,7 +389,7 @@ func createChannel(namespace, name string, ready bool) *unstructured.Unstructure
 	if ready {
 		return &unstructured.Unstructured{
 			Object: map[string]interface{}{
-				"apiVersion": "messaging.knative.dev/v1beta1",
+				"apiVersion": "messaging.knative.dev/v1",
 				"kind":       "InMemoryChannel",
 				"metadata": map[string]interface{}{
 					"creationTimestamp": nil,
@@ -397,7 +397,7 @@ func createChannel(namespace, name string, ready bool) *unstructured.Unstructure
 					"name":              name,
 					"ownerReferences": []interface{}{
 						map[string]interface{}{
-							"apiVersion":         "messaging.knative.dev/v1beta1",
+							"apiVersion":         "messaging.knative.dev/v1",
 							"blockOwnerDeletion": true,
 							"controller":         true,
 							"kind":               "Channel",
@@ -418,7 +418,7 @@ func createChannel(namespace, name string, ready bool) *unstructured.Unstructure
 
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
-			"apiVersion": "messaging.knative.dev/v1beta1",
+			"apiVersion": "messaging.knative.dev/v1",
 			"kind":       "InMemoryChannel",
 			"metadata": map[string]interface{}{
 				"creationTimestamp": nil,
@@ -426,7 +426,7 @@ func createChannel(namespace, name string, ready bool) *unstructured.Unstructure
 				"name":              name,
 				"ownerReferences": []interface{}{
 					map[string]interface{}{
-						"apiVersion":         "messaging.knative.dev/v1beta1",
+						"apiVersion":         "messaging.knative.dev/v1",
 						"blockOwnerDeletion": true,
 						"controller":         true,
 						"kind":               "Channel",
